@@ -28,8 +28,7 @@ namespace TickTactToe
         }
         public void CalculateTurn(SquareData[,] CurrentBoard)
         {
-            SquareData BestMove;
-            
+            BestNode(CurrentBoard);
         }
 
         private int BestNode(SquareData[,] CurrentBoard)
