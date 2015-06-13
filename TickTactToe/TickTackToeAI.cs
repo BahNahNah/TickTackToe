@@ -28,42 +28,88 @@ namespace TickTactToe
         }
         public void CalculateTurn(SquareData[,] CurrentBoard)
         {
-            BestNode(CurrentBoard);
+            SquareData node = InitialNode(CurrentBoard);
+            if (MakeMoveCall != null)
+                MakeMoveCall(node);
         }
 
-        private int BestNode(SquareData[,] CurrentBoard)
+        private SquareData InitialNode(SquareData[,] CurrentBoard)
         {
             int BestScore = 0;
             SquareData NodeSquare = null;
             foreach(SquareData sd in CurrentBoard)
             {
+                int nodeScore = 0;
                 if(sd.Value == 0)
                 {
                     if (NodeSquare == null)
                         NodeSquare = sd;
-                    int nodeScore = 0;
                     sd.Value = SquareValue;
                     int winStat = BoardWinStatus(CurrentBoard);
                     if (!isDraw(CurrentBoard))
                     {
                         if (winStat == SquareValue)
+                        {
                             nodeScore += 10;
-                        else if (winStat == OpponentValue)
-                            nodeScore -= 10;
+                        }
                         else
-                            nodeScore += BestNode(CurrentBoard);
+                        {
+                            nodeScore += BestNode(CurrentBoard, false);
+                        }
+
                     }
-                    if(nodeScore > BestScore)
+                    sd.Value = 0;
+                }
+                if (nodeScore > BestScore)
+                {
+                    BestScore = nodeScore;
+                    NodeSquare = sd;
+                }
+            }
+            return NodeSquare;
+        }
+
+        private int BestNode(SquareData[,] CurrentBoard, bool AiTurn)
+        {
+            int nodeScore = 0;
+            int depth = 0;
+            foreach (SquareData sd in CurrentBoard)
+            {
+                depth++;
+                if (sd.Value == 0)
+                {
+                    if (AiTurn)
                     {
-                        BestScore = nodeScore;
-                        NodeSquare = sd;
+                        sd.Value = SquareValue;
+                        int winStat = BoardWinStatus(CurrentBoard);
+                        if (!isDraw(CurrentBoard))
+                        {
+                            if (winStat == SquareValue)
+                                nodeScore += 10 - depth;
+                            else if (winStat == OpponentValue)
+                                nodeScore -= 10 - depth;
+                            else
+                                nodeScore += BestNode(CurrentBoard, false);
+                        }
+                    }
+                    else
+                    {
+                        sd.Value = OpponentValue;
+                        int winStat = BoardWinStatus(CurrentBoard);
+                        if (!isDraw(CurrentBoard))
+                        {
+                            if (winStat == SquareValue)
+                                nodeScore += 10 - depth;
+                            else if (winStat == OpponentValue)
+                                nodeScore -= 10 - depth;
+                            else
+                                nodeScore += BestNode(CurrentBoard, true);
+                        }
                     }
                     sd.Value = 0;
                 }
             }
-            if (MakeMoveCall != null)
-                MakeMoveCall(NodeSquare);
-            return 0;
+            return nodeScore;
         }
 
         bool isDraw(SquareData[,] Board)
@@ -83,6 +129,8 @@ namespace TickTactToe
         int BoardWinStatus(SquareData[,] Board)
         {
             int sqSquares = (int)Math.Sqrt(Board.Length);
+            int AiWinVal = sqSquares * sqSquares;
+            int oppWin = OpponentValue * sqSquares;
             int rowtotal = 0;
             SquareData[] sd = new SquareData[sqSquares];
             //Row
@@ -93,9 +141,9 @@ namespace TickTactToe
                     sd[row] = Board[col, row];
                     rowtotal += Board[col, row].Value;
                 }
-                if (rowtotal == SquareValue)
+                if (rowtotal == AiWinVal)
                     return SquareValue;
-                if (rowtotal == OpponentValue)
+                if (rowtotal == oppWin)
                     return OpponentValue;
                 rowtotal = 0;
             }
@@ -107,9 +155,9 @@ namespace TickTactToe
                     sd[col] = Board[col, row];
                     coltotal += Board[col, row].Value;
                 }
-                if (coltotal == SquareValue)
+                if (coltotal == AiWinVal)
                     return SquareValue;
-                if (coltotal == OpponentValue)
+                if (coltotal == oppWin)
                     return OpponentValue;
                 coltotal = 0;
             }
@@ -119,9 +167,9 @@ namespace TickTactToe
                 sd[s] = Board[s, s];
                 diagtotal += Board[s, s].Value;
             }
-            if (diagtotal == SquareValue)
+            if (diagtotal == AiWinVal)
                 return SquareValue;
-            if (diagtotal == OpponentValue)
+            if (diagtotal == oppWin)
                 return OpponentValue;
             diagtotal = 0;
             for (int s = 0; s < sqSquares; s++)
@@ -129,9 +177,9 @@ namespace TickTactToe
                 sd[s] = Board[s, (sqSquares - 1) - s];
                 diagtotal += Board[s, (sqSquares - 1) - s].Value;
             }
-            if (diagtotal == SquareValue)
+            if (diagtotal == AiWinVal)
                 return SquareValue;
-            if (diagtotal == OpponentValue)
+            if (diagtotal == oppWin)
                 return OpponentValue;
             return 0;
         }

@@ -17,6 +17,7 @@ namespace TickTactToe
         int X_Win_SUM, O_Win_SUM;
         int X_Player_num, O_Player_num;
         bool GameOver = false;
+        TickTackToeAI AI = null;
         int Turn
         {
             get { return _turn; }
@@ -67,6 +68,15 @@ namespace TickTactToe
                 Turn = O_Player_num;
             else
                 Turn = X_Player_num;
+            if(AisTurn())
+                AI.CalculateTurn(Board);
+        }
+
+        bool AisTurn()
+        {
+            if (AI == null)
+                return false;
+            return (Turn == AI.SquareValue);
         }
 
         bool isDraw()
@@ -184,6 +194,8 @@ namespace TickTactToe
 
         void b_MouseClick(object sender, MouseEventArgs e)
         {
+            if (AisTurn())
+                return;
             SquareData sd = (SquareData)((Button)sender).Tag;
             TakeTurn(sd);
         }
@@ -204,6 +216,10 @@ namespace TickTactToe
                         Turn = O_Player_num;
                     else
                         Turn = X_Player_num;
+                    AI = new TickTackToeAI(O_Player_num, X_Player_num);
+                    AI.MakeMoveCall += TakeTurn;
+                    if (AisTurn())
+                        AI.CalculateTurn(Board);
                 }
             }
         }
